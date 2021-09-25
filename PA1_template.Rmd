@@ -1,0 +1,291 @@
+---
+title: "PA1_template"
+author: "Sachin Sharma"
+date: "September 25, 2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Importing the libraries 
+
+library(naniar)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+
+# Loading the data  and save this data as df : 
+
+df <- read.csv("activity.csv",sep = ",")
+
+df
+
+```
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# Lets Check the summary of the data frame 
+
+summary(df)
+
+
+```
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# As we can see that the date column is in character format, so lets convert it into date format 
+
+df$date <- as.Date(df$date)
+
+# Again checkig the dataframe 
+
+str(df)
+
+```
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#Question 1 : What is mean total number of steps taken per day?
+#For this part of the assignment, you can ignore the missing values in the dataset.
+
+#Make a histogram of the total number of steps taken each day
+
+## create a new data frame with the number of steps per day using dplyr() , we will save this data by the name of 
+# daily_activity. This code will group the data by date and sum all the steps taken on every date : 
+
+daily_activity <- df %>%  group_by(date)  %>%  summarise(Steps = sum(steps))
+
+plot_hist <- ggplot(data = daily_activity, mapping = aes(x = Steps)) + geom_histogram(fill = "blue",colour = "black") + scale_x_continuous("Steps per Day") + scale_y_continuous("Frequency") + ggtitle("Total Number of Steps Taken Each Day")
+plot_hist
+```
+
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# Question 2: Calculate and report the mean and median total number of steps taken per day
+
+
+mean_stepsday <- mean(daily_activity$Steps, na.rm = TRUE)
+
+round(mean_stepsday)
+
+```
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+median_stepsDay <- median(daily_activity$Steps, na.rm = TRUE)
+
+round(median_stepsDay)
+
+```
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# Question 3 :  What is the average daily activity pattern?
+
+
+## We are creating a new data frame with the average number of steps per interval and using dplyr omitting NAs here.
+
+new_data  <- df %>%  group_by(interval)  %>%  summarise(meanSteps = mean(steps,na.rm = TRUE))
+
+head(new_data)
+
+
+```
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+plot_av_steps <- ggplot(data = new_data, mapping = aes(x = interval, y = meanSteps)) + geom_line() + scale_x_continuous("Day Interval", breaks = seq(min(new_data$interval),max(new_data$interval), 100)) + scale_y_continuous("Average Number of Steps") + ggtitle("Average Number of Steps Taken by Interval")
+plot_av_steps
+
+
+```
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#IMPUTING THE MISSING VALUES : 
+
+# Lets check the missing values of the dataframe using following three methods : 
+
+# Method I : This method will let us know how many missing values are there in the data as a whole i.e. total missing values 
+
+sum(is.na(df))
+
+```
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Method II : This method will let us know how many missing values are there columnwise 
+
+sapply(df, function(x)sum(is.na(x)))
+
+
+```
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Method III: Visualizing the missing values using naniar(). This method will show us the missing values graphically. 
+
+vis_miss(df) # With this plot we can see that we have all the data missing in the steps column
+
+
+
+
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# Filling the missing values with the help of average in the steps column 
+
+df$steps = ifelse(is.na(df$steps), ave(df$steps, FUN = function(x)mean(x, na.rm = TRUE)),
+                  df$steps)
+
+
+```
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# Now checking the data and also checking whether there is any missing values in the data 
+
+head(df)
+
+
+
+```
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+sum(is.na(df))
+
+
+```
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# Now creating new dataset with the missing data filled by the name of df_new 
+
+df_new <-df
+
+
+
+
+```
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+## Creating a new data frame with the number of steps per day using dplyr, which missing values are adjusted 
+
+df_new_steps <- df_join %>% group_by(date) %>%  summarise(Steps = sum(steps))
+
+
+```
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+plot_df_new_steps <- ggplot(data =df_new_steps, mapping = aes(x = Steps)) + geom_histogram(fill = "red", colour = "black") + scale_x_continuous("Steps per Day") +scale_y_continuous("Frequency") + ggtitle("Total Number of Steps Taken Each Day - Missing Values Adjusted")
+plot_df_new_steps
+
+
+```
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#Question 4 : Are there differences in activity patterns between weekdays and weekends?
+
+#For this part the weekdays() function may be of some help here. Use the dataset with the filled-in missing values for this part.
+
+#Create a new factor variable in the dataset with two levels - “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
+
+# Making labels weekdays and week ends in the df_new
+
+df_new$date <- as.Date(df_new$date)
+
+df_new$type_Week_Day <- ifelse(weekdays(df_new$date) %in% c("Satuday", "Sunday"), "weekend", "weekday")
+
+
+
+
+```
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+## Now creating a new data frame with the average number of steps per interval using dplyr() function 
+
+
+df_new_week <- df_new  %>%  group_by(interval, type_Week_Day)  %>%  summarise(meanSteps = mean(steps,na.rm = TRUE))
+
+head(df_new_week)
+
+```
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Plotting the graph : 
+
+
+df_new_plot <- ggplot(data = df_new_week , mapping = aes(x = interval, y = meanSteps)) +geom_line() + facet_grid(type_Week_Day ~ .) + scale_x_continuous("Day Interval",breaks = seq(min(df_new$interval), max(df_new$interval), 100)) + scale_y_continuous("Average Number of Steps") + ggtitle("Average Number of Steps Taken by Interval")
+df_new_plot
+
+
+```
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Answer : Yes, it seems there are a lot of differences between weekdays and weekends. People tend to wake up later. During weekdays the activity peak is at 8:35 am whereas in the weekend the peaks are around 10:00 am and 4:00 pm
+
+```
+
